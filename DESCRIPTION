@@ -1,7 +1,7 @@
 Package: libdeflate
 Type: Package
 Title: DEFLATE Compression Static Library and Headers
-Version: 1.23.0
+Version: 1.23.1
 Authors@R: 
     c(
       person(
@@ -32,7 +32,7 @@ RoxygenNote: 7.3.2
 Config/build/compilation-database: true
 BugReports: https://github.com/tylermorganwall/libdeflate/issues
 NeedsCompilation: yes
-Packaged: 2025-05-06 01:24:01 UTC; tyler
+Packaged: 2025-05-11 00:08:45 UTC; tyler
 Author: Tyler Morgan-Wall [aut, cre] (ORCID:
     <https://orcid.org/0000-0002-3131-3814>),
   Eric Biggers [aut, cph],
@@ -40,4 +40,4 @@ Author: Tyler Morgan-Wall [aut, cre] (ORCID:
   Kevin Ushey [cph]
 Maintainer: Tyler Morgan-Wall <tylermw@gmail.com>
 Repository: CRAN
-Date/Publication: 2025-05-07 13:50:02 UTC
+Date/Publication: 2025-05-11 07:10:02 UTC

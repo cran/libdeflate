@@ -1,6 +1,7 @@
-b837213f146f108f7bfa8e2caf7a72af *DESCRIPTION
+6d7963b99019c4cb5b9d3850081c0166 *DESCRIPTION
 7b5fee42afac823be376161d28cb471e *LICENSE
 e3a1de45824596d4076c9f18364b466e *NAMESPACE
+78ba107afd2165c735a68a87fb857a9d *NEWS.md
 87df9a6197f6dba4dfa7ca69f20a2c50 *R/api.R
 6f9a955cb1c09bed5d2888a234739f0c *R/zzz.R
 2e606d7a56771b7ae197e61762ec09f3 *README.md
@@ -83,6 +84,6 @@ a8cb7b362e77d1e9ca333e7659413278 *src/libdeflate/programs/test_trailing_bytes.c
 299feb86bc833b8ee93642d8d32e2bc3 *src/r-api.c
 c15aee87947a663a22f9c6d81b98c16c *tools/config.R
 5dfdf771086be9da08d02f25b6800a85 *tools/config/cleanup.R
-58bf2333f8399b8e6ab3beb7a08ee5f7 *tools/config/configure.R
+f45f814fdb52b21c03dee9aa35a1daa7 *tools/config/configure.R
 51886cc76bc094f296c6dc8a900fa23b *tools/fix-line-endings.R
 77d24052c273ea3a0b996e38c0f5d5b4 *tools/fix-targets.R
