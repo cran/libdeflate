@@ -1,4 +1,4 @@
-8254d5ff09fa5356274afdcb5f0eaa96 *DESCRIPTION
+5ac5d1af8fcb618e1a66741de99ee064 *DESCRIPTION
 7b5fee42afac823be376161d28cb471e *LICENSE
 e3a1de45824596d4076c9f18364b466e *NAMESPACE
 78ba107afd2165c735a68a87fb857a9d *NEWS.md
@@ -15,8 +15,8 @@ af851d3c1304765157935c41e5210295 *inst/include/libdeflate.h
 4256ff63b0b3c0e7c4d3851bdc97e8e4 *man/alloc_decompressor.Rd
 d6d9fa9e508f32fdc29c6fae0f3307f3 *man/deflate_compress.Rd
 e626ca2cd2c6d989c92e719fb3c07a5d *man/deflate_decompress.Rd
-b4cf8f1e0a6a384307ce786d4fab9a48 *src/Makevars.in
-b4cf8f1e0a6a384307ce786d4fab9a48 *src/Makevars.win.in
+b086f267a802df0b3d50d8520cd6ec56 *src/Makevars.in
+b086f267a802df0b3d50d8520cd6ec56 *src/Makevars.win.in
 c9c51a4aa2106788ba4e11958482562d *src/libdeflate/CMakeLists.txt
 89f8c510215440fe2f208fba4afe07e0 *src/libdeflate/COPYING
 4ef5054d9111842313ec9c82e1a2a8d8 *src/libdeflate/NEWS.md
@@ -84,6 +84,6 @@ a8cb7b362e77d1e9ca333e7659413278 *src/libdeflate/programs/test_trailing_bytes.c
 299feb86bc833b8ee93642d8d32e2bc3 *src/r-api.c
 c15aee87947a663a22f9c6d81b98c16c *tools/config.R
 5dfdf771086be9da08d02f25b6800a85 *tools/config/cleanup.R
-a5b69a7d0e61911735f554fc4a75a077 *tools/config/configure.R
+5ae0337d651c41d684c724cd25428d2c *tools/config/configure.R
 51886cc76bc094f296c6dc8a900fa23b *tools/fix-line-endings.R
 77d24052c273ea3a0b996e38c0f5d5b4 *tools/fix-targets.R
