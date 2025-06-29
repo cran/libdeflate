@@ -43,6 +43,64 @@ LIB_INCLUDE_ASSIGN = ""
 LIB_LINK_ASSIGN = ""
 
 if (nzchar(pkgconfig_path)) {
+	## Let's collect out all the available static library flags/paths during
+	## during configuration, as this should make it easier to debug these
+	## issues in the future.
+
+	## ---------------------------------------------------------------
+	##  Collect pkg-config information  ->  inst/extdata/pkgcfg_db.rds
+	## ---------------------------------------------------------------
+
+	collapse = function(x) trimws(paste(x, collapse = " "))
+
+	grab = function(mod, flag) {
+		tryCatch(
+			suppressWarnings(
+				collapse(system2(
+					pkgconfig_path,
+					c(flag, mod),
+					stdout = TRUE,
+					stderr = FALSE
+				))
+			),
+			error = \(e) ""
+		)
+	}
+
+	mods = strsplit(
+		system2(pkgconfig_path, "--list-all", stdout = TRUE, stderr = FALSE),
+		"\\s+"
+	) |>
+		vapply(\(x) x[1L], "") |>
+		sort()
+
+	db = do.call(
+		rbind,
+		lapply(mods, \(m) {
+			data.frame(
+				module = m,
+				cflags = grab(m, "--cflags"),
+				libs = grab(m, "--libs"),
+				static_libs = grab(m, c("--static", "--libs")),
+				stringsAsFactors = FALSE
+			)
+		})
+	)
+
+	out = file.path(
+		Sys.getenv("R_PACKAGE_DIR"),
+		"extdata",
+		"pkgcfg_db.rds"
+	)
+	dir.create(dirname(out), showWarnings = FALSE, recursive = TRUE)
+	saveRDS(db, out, version = 3)
+
+	message(sprintf(
+		"*** wrote pkg-config database (%d rows) to %s",
+		nrow(db),
+		out
+	))
+
 	pc_status = system2(
 		pkgconfig_path,
 		c("--exists", sprintf("'%s >= %s'", package_name, package_version)),
@@ -60,26 +118,40 @@ if (nzchar(pkgconfig_path)) {
 			)
 		)
 		quote_paths = function(pkgconfig_output, prefix = "-I") {
-			paste(
-				paste0(
-					prefix,
-					vapply(
-						strsplit(
-							trimws(gsub(prefix, "", pkgconfig_output, fixed = TRUE)),
-							"\\s+"
-						)[[1]],
-						shQuote,
-						"character"
-					)
-				),
-				collapse = " "
+			include_dirs = strsplit(
+				trimws(gsub(prefix, "", pkgconfig_output, fixed = TRUE)),
+				"\\s+"
+			)[[1]]
+
+			if (length(include_dirs) == 1) {
+				if (include_dirs == "") {
+					return("")
+				}
+			}
+
+			return(
+				paste(
+					paste0(
+						prefix,
+						vapply(
+							include_dirs,
+							shQuote,
+							"character"
+						)
+					),
+					collapse = " "
+				)
 			)
 		}
-		lib_include = quote_paths(system2(
-			pkgconfig_path,
-			c("--cflags", package_name),
-			stdout = TRUE
-		))
+
+		lib_include = quote_paths(
+			system2(
+				pkgconfig_path,
+				c("--cflags", package_name),
+				stdout = TRUE
+			),
+			prefix = "-I"
+		)
 
 		message(
 			sprintf("*** configure: using include path '%s'", lib_include)
@@ -100,10 +172,17 @@ if (nzchar(pkgconfig_path)) {
 				lib_link
 			)
 		)
-
-		LIB_INCLUDE_ASSIGN = sprintf('LIB_INCLUDE = %s', lib_include) #This should already have -I
-		LIB_LINK_ASSIGN = sprintf('LIB_LINK = %s', lib_link) #This should already have -L
+		if (nzchar(lib_include)) {
+			LIB_INCLUDE_ASSIGN = sprintf('LIB_INCLUDE = %s', lib_include) #This should already have -I
+		}
+		if (nzchar(lib_link)) {
+			LIB_LINK_ASSIGN = sprintf('LIB_LINK = %s', lib_link) #This should already have -L
+		}
+	} else {
+		message(sprintf("*** %s not found by pkg-config", package_name))
 	}
+} else {
+	message("*** pkg-config not available, skipping to common locations")
 }
 
 if (!lib_exists) {
@@ -163,11 +242,17 @@ if (!lib_exists) {
 				prefix,
 				"include"
 			)
-			LIB_INCLUDE_ASSIGN = sprintf('LIB_INCLUDE = -I"%s"', lib_include) #This doesn't have -I yet
-			LIB_LINK_ASSIGN = sprintf('LIB_LINK = -L"%s"', lib_link) #This doesn't have -L yet
+			if (nzchar(lib_include)) {
+				LIB_INCLUDE_ASSIGN = sprintf('LIB_INCLUDE = -I"%s"', lib_include) #This doesn't have -I yet
+			}
+			if (nzchar(lib_link)) {
+				LIB_LINK_ASSIGN = sprintf('LIB_LINK = -L"%s"', lib_link) #This doesn't have -L yet
+			}
 			break
 		}
 	}
+} else {
+	message(sprintf("*** %s not found in common library locations", package_name))
 }
 
 REASON_FOR_BUILDING = r"{"==> Building bundled libdeflate for linking and downstream packages that build and link bundled static libraries that use CMake"}"
