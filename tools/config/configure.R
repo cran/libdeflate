@@ -34,6 +34,7 @@ if (syswhich_cmake != "") {
 #Use pkg-config (if available) to find a system library
 LIB_SYSTEM = ""
 package_name = "libdeflate"
+static_lib_filename = sprintf("%s.a", package_name)
 package_version = "1.24"
 
 pkgconfig_path = Sys.which("pkg-config")
@@ -41,66 +42,9 @@ pkgconfig_path = Sys.which("pkg-config")
 lib_exists = FALSE
 LIB_INCLUDE_ASSIGN = ""
 LIB_LINK_ASSIGN = ""
+lib_link = ""
 
 if (nzchar(pkgconfig_path)) {
-	## Let's collect out all the available static library flags/paths during
-	## during configuration, as this should make it easier to debug these
-	## issues in the future.
-
-	## ---------------------------------------------------------------
-	##  Collect pkg-config information  ->  inst/extdata/pkgcfg_db.rds
-	## ---------------------------------------------------------------
-
-	collapse = function(x) trimws(paste(x, collapse = " "))
-
-	grab = function(mod, flag) {
-		tryCatch(
-			suppressWarnings(
-				collapse(system2(
-					pkgconfig_path,
-					c(flag, mod),
-					stdout = TRUE,
-					stderr = FALSE
-				))
-			),
-			error = \(e) ""
-		)
-	}
-
-	mods = strsplit(
-		system2(pkgconfig_path, "--list-all", stdout = TRUE, stderr = FALSE),
-		"\\s+"
-	) |>
-		vapply(\(x) x[1L], "") |>
-		sort()
-
-	db = do.call(
-		rbind,
-		lapply(mods, \(m) {
-			data.frame(
-				module = m,
-				cflags = grab(m, "--cflags"),
-				libs = grab(m, "--libs"),
-				static_libs = grab(m, c("--static", "--libs")),
-				stringsAsFactors = FALSE
-			)
-		})
-	)
-
-	out = file.path(
-		Sys.getenv("R_PACKAGE_DIR"),
-		"extdata",
-		"pkgcfg_db.rds"
-	)
-	dir.create(dirname(out), showWarnings = FALSE, recursive = TRUE)
-	saveRDS(db, out, version = 3)
-
-	message(sprintf(
-		"*** wrote pkg-config database (%d rows) to %s",
-		nrow(db),
-		out
-	))
-
 	pc_status = system2(
 		pkgconfig_path,
 		c("--exists", sprintf("'%s >= %s'", package_name, package_version)),
@@ -113,7 +57,7 @@ if (nzchar(pkgconfig_path)) {
 	if (lib_exists) {
 		message(
 			sprintf(
-				"*** configure: system %s exists, using that for building the library",
+				"*** configure: system %s may exist, checking to see if valid location",
 				package_name
 			)
 		)
@@ -123,10 +67,11 @@ if (nzchar(pkgconfig_path)) {
 				"\\s+"
 			)[[1]]
 
-			if (length(include_dirs) == 1) {
-				if (include_dirs == "") {
-					return("")
-				}
+			if (length(include_dirs) == 0) {
+				return("")
+			}
+			if (length(include_dirs) == 1 && include_dirs == "") {
+				return("")
 			}
 
 			return(
@@ -144,6 +89,20 @@ if (nzchar(pkgconfig_path)) {
 			)
 		}
 
+		check_existence = function(lib_link_output, static_lib_filename) {
+			any(file.exists(file.path(
+				gsub(
+					pattern = "(-L)|('|\")",
+					"",
+					x = unlist(strsplit(
+						lib_link_output,
+						split = " "
+					))
+				),
+				static_lib_filename
+			)))
+		}
+
 		lib_include = quote_paths(
 			system2(
 				pkgconfig_path,
@@ -151,10 +110,6 @@ if (nzchar(pkgconfig_path)) {
 				stdout = TRUE
 			),
 			prefix = "-I"
-		)
-
-		message(
-			sprintf("*** configure: using include path '%s'", lib_include)
 		)
 
 		lib_link = quote_paths(
@@ -166,93 +121,41 @@ if (nzchar(pkgconfig_path)) {
 			prefix = "-L"
 		)
 
-		message(
-			sprintf(
-				"*** configure: using link path '%s'",
-				lib_link
-			)
-		)
-		if (nzchar(lib_include)) {
-			LIB_INCLUDE_ASSIGN = sprintf('LIB_INCLUDE = %s', lib_include) #This should already have -I
-		}
-		if (nzchar(lib_link)) {
-			LIB_LINK_ASSIGN = sprintf('LIB_LINK = %s', lib_link) #This should already have -L
+		if (!check_existence(lib_link, static_lib_filename)) {
+			lib_exists = FALSE
+		} else {
+			if (nzchar(lib_include)) {
+				message(
+					sprintf(
+						"*** configure: using include path '%s'",
+						lib_include
+					)
+				)
+				LIB_INCLUDE_ASSIGN = sprintf('LIB_INCLUDE = %s', lib_include) #This should already have -I
+			} else {
+				lib_exists = FALSE
+			}
+			if (nzchar(lib_link)) {
+				message(
+					sprintf(
+						"*** configure: using link path '%s'",
+						lib_link
+					)
+				)
+				LIB_LINK_ASSIGN = sprintf('LIB_LINK = %s', lib_link) #This should already have -L
+			} else {
+				message(sprintf(
+					"*** %s found by pkg-config, but returned no link directory--skipping",
+					package_name
+				))
+				lib_exists = FALSE
+			}
 		}
 	} else {
 		message(sprintf("*** %s not found by pkg-config", package_name))
 	}
 } else {
-	message("*** pkg-config not available, skipping to common locations")
-}
-
-if (!lib_exists) {
-	fallback_prefixes = c(
-		"/opt/R/arm64",
-		"/opt/R/x86_64",
-		"/opt/homebrew",
-		"/usr/local",
-		"/usr"
-	)
-
-	for (prefix in fallback_prefixes) {
-		lib_exists_check = file.exists(file.path(
-			prefix,
-			"lib",
-			sprintf("%s.a", package_name)
-		))
-		header_exists = file.exists(file.path(
-			prefix,
-			"include",
-			"libdeflate.h"
-		))
-		if (header_exists) {
-			header_lines = readLines(file.path(
-				prefix,
-				"include",
-				"libdeflate.h"
-			))
-			major_version_line = grepl("LIBDEFLATE_VERSION_MAJOR", header_lines)
-			minor_version_line = grepl("LIBDEFLATE_VERSION_MINOR", header_lines)
-			stopifnot(sum(major_version_line) == 1)
-			stopifnot(sum(minor_version_line) == 1)
-			major_version = as.integer(strsplit(
-				header_lines[major_version_line],
-				"\\s+"
-			)[[1]][3])
-			minor_version = as.integer(strsplit(
-				header_lines[minor_version_line],
-				"\\s+"
-			)[[1]][3])
-			if (major_version > 1 || minor_version < 24) {
-				message(sprintf(
-					"System install of libdeflate v%i.%i found, but is not of a suitable version (>= v1.24) ",
-					major_version,
-					minor_version
-				))
-				header_exists = FALSE
-			}
-		}
-		if (lib_exists_check && header_exists) {
-			lib_exists = TRUE
-			lib_link = file.path(
-				prefix,
-				"lib"
-			)
-			lib_include = file.path(
-				prefix,
-				"include"
-			)
-			if (nzchar(lib_include)) {
-				LIB_INCLUDE_ASSIGN = sprintf('LIB_INCLUDE = -I"%s"', lib_include) #This doesn't have -I yet
-			}
-			if (nzchar(lib_link)) {
-				LIB_LINK_ASSIGN = sprintf('LIB_LINK = -L"%s"', lib_link) #This doesn't have -L yet
-			}
-			break
-		}
-	}
-} else {
-	message(sprintf("*** %s not found in common library locations", package_name))
+	message("*** pkg-config not available, using bundled libdeflate")
 }
 
 REASON_FOR_BUILDING = r"{"==> Building bundled libdeflate for linking and downstream packages that build and link bundled static libraries that use CMake"}"

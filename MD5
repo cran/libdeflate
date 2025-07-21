@@ -1,9 +1,8 @@
-89683a40059a07ab210db835ecd19742 *DESCRIPTION
+6848dad44d34a1c9c57e8116c8fd8b43 *DESCRIPTION
 7b5fee42afac823be376161d28cb471e *LICENSE
 e3a1de45824596d4076c9f18364b466e *NAMESPACE
 78ba107afd2165c735a68a87fb857a9d *NEWS.md
 59690c539c37b73ba7dd1667ef5011c2 *R/api.R
-197c5ef800fd6118f3a76833a861f224 *R/utils.R
 6f9a955cb1c09bed5d2888a234739f0c *R/zzz.R
 2e606d7a56771b7ae197e61762ec09f3 *README.md
 38ba0348cef0ac8408c22acb51d50d83 *cleanup
@@ -16,7 +15,6 @@ af851d3c1304765157935c41e5210295 *inst/include/libdeflate.h
 4256ff63b0b3c0e7c4d3851bdc97e8e4 *man/alloc_decompressor.Rd
 d6d9fa9e508f32fdc29c6fae0f3307f3 *man/deflate_compress.Rd
 e626ca2cd2c6d989c92e719fb3c07a5d *man/deflate_decompress.Rd
-9268aae32a8ff420c4215961ae09c6e0 *man/pkgcfg_db.Rd
 b086f267a802df0b3d50d8520cd6ec56 *src/Makevars.in
 b086f267a802df0b3d50d8520cd6ec56 *src/Makevars.win.in
 c9c51a4aa2106788ba4e11958482562d *src/libdeflate/CMakeLists.txt
@@ -86,6 +84,6 @@ a8cb7b362e77d1e9ca333e7659413278 *src/libdeflate/programs/test_trailing_bytes.c
 299feb86bc833b8ee93642d8d32e2bc3 *src/r-api.c
 c15aee87947a663a22f9c6d81b98c16c *tools/config.R
 5dfdf771086be9da08d02f25b6800a85 *tools/config/cleanup.R
-6968d87fb7ed430f43811fd02e98ed1f *tools/config/configure.R
+485ee5356afbaa01db2b1db7bab6a4b1 *tools/config/configure.R
 51886cc76bc094f296c6dc8a900fa23b *tools/fix-line-endings.R
 77d24052c273ea3a0b996e38c0f5d5b4 *tools/fix-targets.R
